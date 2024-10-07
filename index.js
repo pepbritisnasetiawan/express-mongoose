@@ -6,6 +6,7 @@ const app = express();
 
 /* Models */
 const Product = require('./models/product');
+const ErrorHandler = require('./utils/ErrorHandler');
 
 // connect to mongodb
 mongoose
@@ -38,6 +39,7 @@ app.get('/products', async (req, res) => {
 });
 
 app.get('/products/create', (req, res) => {
+  throw new ErrorHandler('This is custome error', 503);
   res.render('products/create');
 });
 
@@ -47,30 +49,51 @@ app.post('/products', async (req, res) => {
   res.redirect(`/products/${product._id}`);
 });
 
-app.get('/products/:id', async (req, res) => {
-  const { id } = req.params;
-  const product = await Product.findById(id);
-  res.render('products/show', { product });
+app.get('/products/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+    res.render('products/show', { product });
+  } catch (error) {
+    next(new ErrorHandler('Product not found', 404));
+  }
 });
 
-app.get('/products/:id/edit', async (req, res) => {
-  const { id } = req.params;
-  const product = await Product.findById(id);
-  res.render('products/edit', { product });
+app.get('/products/:id/edit', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+    res.render('products/edit', { product });
+  } catch (error) {
+    next(new ErrorHandler('Product not found', 404));
+  }
 });
 
-app.put('/products/:id', async (req, res) => {
-  const { id } = req.params;
-  const product = await Product.findByIdAndUpdate(id, req.body, {
-    runValidators: true,
-  });
-  res.redirect(`/products/${product._id}`);
+app.put('/products/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByIdAndUpdate(id, req.body, {
+      runValidators: true,
+    });
+    res.redirect(`/products/${product._id}`);
+  } catch (error) {
+    next(new ErrorHandler('failed update data', 412));
+  }
 });
 
 app.delete('/products/:id', async (req, res) => {
-  const { id } = req.params;
-  await Product.findByIdAndDelete(id);
-  res.redirect('/products');
+  try {
+    const { id } = req.params;
+    await Product.findByIdAndDelete(id);
+    res.redirect('/products');
+  } catch (error) {
+    next(new ErrorHandler('failed delet item', 412));
+  }
+});
+
+app.use((err, req, res, next) => {
+  const { status = 500, message = 'Something went wrong' } = err;
+  res.status(status).send(message);
 });
 
 app.listen(3000, () => {
