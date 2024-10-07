@@ -95,6 +95,25 @@ app.delete(
   })
 );
 
+const ValidationError = (err) => {
+  err.status = 400;
+  err.message = Object.values(err.errors).map((item) => item.message);
+  return new ErrorHandler(err.message, err.status);
+};
+
+const CastError = (err) => {
+  err.status = 404;
+  err.message = 'Product not found';
+  return new ErrorHandler(err.message, err.status);
+};
+
+app.use((err, req, res, next) => {
+  console.dir(err);
+  if (err.name === 'ValidationError') err = ValidationError(err);
+  if (err.name === 'CastError') err = CastError(err);
+  next(err);
+});
+
 app.use((err, req, res, next) => {
   const { status = 500, message = 'Something went wrong' } = err;
   res.status(status).send(message);
