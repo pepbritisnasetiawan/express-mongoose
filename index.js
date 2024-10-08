@@ -7,6 +7,7 @@ const app = express();
 /* Models */
 const Product = require('./models/product');
 const ErrorHandler = require('./utils/ErrorHandler');
+const Garment = require('./models/garment');
 
 // connect to mongodb
 mongoose
@@ -32,6 +33,27 @@ function wrapAsync(fn) {
 app.get('/', (req, res) => {
   res.send('hello world');
 });
+
+app.get(
+  '/garments',
+  wrapAsync(async (req, res) => {
+    const garments = await Garment.find({});
+    res.render('garment/index', { garments });
+  })
+);
+
+app.get('/garments/create', (req, res) => {
+  res.render('garment/create');
+});
+
+app.post(
+  '/garments',
+  wrapAsync(async (req, res) => {
+    const garment = new Garment(req.body);
+    await garment.save();
+    res.redirect('/garments');
+  })
+);
 
 app.get('/products', async (req, res) => {
   const { category } = req.query;
