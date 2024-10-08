@@ -10,12 +10,14 @@ const garmentSchema = new mongoose.Schema({
   },
   contact: {
     type: String,
-    required: [true, 'Kontak tidak bboleh kosong'],
+    required: [true, 'Kontak tidak boleh kosong'],
   },
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Garments',
-  },
+  products: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+    },
+  ],
 });
 
 const Garment = mongoose.model('Garment', garmentSchema);

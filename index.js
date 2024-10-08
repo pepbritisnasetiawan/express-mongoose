@@ -3,10 +3,10 @@ const express = require('express');
 const methodOverride = require('method-override');
 const mongoose = require('mongoose');
 const app = express();
+const ErrorHandler = require('./utils/ErrorHandler');
 
 /* Models */
 const Product = require('./models/product');
-const ErrorHandler = require('./utils/ErrorHandler');
 const Garment = require('./models/garment');
 
 // connect to mongodb
@@ -52,6 +52,34 @@ app.post(
     const garment = new Garment(req.body);
     await garment.save();
     res.redirect('/garments');
+  })
+);
+
+app.get(
+  '/garments/:id',
+  wrapAsync(async (req, res) => {
+    const { id } = req.params;
+    const garment = await Garment.findById(id);
+    res.render('garment/show', { garment });
+  })
+);
+
+app.get('/garments/:garment_id/products/create', (req, res) => {
+  const { garment_id } = req.params;
+  res.render('products/create', { garment_id });
+});
+
+app.post(
+  '/garments/:garment_id/products',
+  wrapAsync(async (req, res) => {
+    const { garment_id } = req.params;
+    const garment = await Garment.findById(garment_id);
+    const product = new Product(req.body);
+    garment.products.push(product);
+    await garment.save();
+    await product.save();
+    console.log(garment);
+    res.redirect(`/garments/${garment_id}`);
   })
 );
 
