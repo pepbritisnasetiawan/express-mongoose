@@ -12,9 +12,15 @@ exports.renderCreateForm = (req, res) => {
 };
 
 exports.createGarment = async (req, res) => {
-  const garment = new Garment(req.body);
-  await garment.save();
-  res.redirect('/garments');
+  try {
+    const garment = new Garment(req.body);
+    await garment.save();
+    req.flash('success_msg', 'Product created successfully');
+    res.redirect('/garments');
+  } catch (error) {
+    req.flash('error_msg', 'Failed to create product');
+    res.redirect('/garments/create');
+  }
 };
 
 exports.getGarmentById = async (req, res) => {
@@ -29,19 +35,31 @@ exports.renderCreateProductForm = (req, res) => {
 };
 
 exports.createProductForGarment = async (req, res) => {
-  const { garment_id } = req.params;
-  const garment = await Garment.findById(garment_id);
-  const product = new Product(req.body);
-  garment.products.push(product);
-  product.garment = garment;
-  await garment.save();
-  await product.save();
-  console.log(garment);
-  res.redirect(`/garments/${garment_id}`);
+  try {
+    const { garment_id } = req.params;
+    const garment = await Garment.findById(garment_id);
+    const product = new Product(req.body);
+    garment.products.push(product);
+    product.garment = garment;
+    await garment.save();
+    await product.save();
+    console.log(garment);
+    req.flash('success_msg', 'Product created successfully');
+    res.redirect(`/garments/${garment_id}`);
+  } catch (error) {
+    req.flash('error_msg', 'Failed to create product');
+    res.redirect(`/garments/create`);
+  }
 };
 
 exports.deleteGarment = async (req, res) => {
-  const { garment_id } = req.params;
-  await Garment.findOneAndDelete({ _id: garment_id });
-  res.redirect('/garments');
+  try {
+    const { garment_id } = req.params;
+    await Garment.findOneAndDelete({ _id: garment_id });
+    req.flash('success_msg', 'Product created successfully');
+    res.redirect('/garments');
+  } catch (error) {
+    req.flash('error_msg', 'Failed to create product');
+    res.redirect('/garments');
+  }
 };

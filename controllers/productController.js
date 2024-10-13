@@ -5,10 +5,8 @@ exports.getAllProducts = async (req, res) => {
   let products;
   if (category) {
     products = await Product.find({ category });
-    // res.render('products/index', { products, category });
   } else {
     products = await Product.find({});
-    // res.render('products/index', { products, category: 'All' });
   }
   res.render('products/index', { products, category: category || 'All' });
 };
@@ -18,9 +16,15 @@ exports.renderCreateForm = (req, res) => {
 };
 
 exports.createProduct = async (req, res) => {
-  const product = new Product(req.body);
-  await product.save();
-  res.redirect(`/products/${product._id}`);
+  try {
+    const product = new Product(req.body);
+    await product.save();
+    req.flash('success_msg', 'Product created successfully');
+    res.redirect(`/products/${product._id}`);
+  } catch (error) {
+    req.flash('error_msg', 'Failed to create product');
+    res.redirect('/products/create');
+  }
 };
 
 exports.getProductById = async (req, res) => {
@@ -36,16 +40,28 @@ exports.renderEditForm = async (req, res) => {
 };
 
 exports.updateProduct = async (req, res) => {
-  const { id } = req.params;
-  const product = await Product.findByIdAndUpdate(id, req.body, {
-    runValidators: true,
-    new: true,
-  });
-  res.redirect(`/products/${product._id}`);
+  try {
+    const { id } = req.params;
+    const product = await Product.findByIdAndUpdate(id, req.body, {
+      runValidators: true,
+      new: true,
+    });
+    req.flash('success_msg', 'Product updated successfully');
+    res.redirect(`/products/${product._id}`);
+  } catch (error) {
+    req.flash('error_msg', 'Failed to update product');
+    res.redirect(`/products/${req.params.id}/edit`);
+  }
 };
 
 exports.deleteProduct = async (req, res) => {
-  const { id } = req.params;
-  await Product.findByIdAndDelete(id);
-  res.redirect('/products');
+  try {
+    const { id } = req.params;
+    await Product.findByIdAndDelete(id);
+    req.flash('success_msg', 'Product deleted successfully');
+    res.redirect('/products');
+  } catch (error) {
+    req.flash('error_msg', 'Failed to delete product');
+    res.redirect('/products');
+  }
 };
